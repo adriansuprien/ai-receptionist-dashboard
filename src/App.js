@@ -608,11 +608,128 @@ function SettingsPage() {
   );
 }
 
+// ─── ORDERS ──────────────────────────────────────────────────────────────────
+function OrdersPage({ calls }) {
+  const [orderStatuses, setOrderStatuses] = useState({});
+
+  const orders = calls.filter(c => c.order_summary && c.order_summary.trim());
+
+  const getOrderStatus = (call) => {
+    if (orderStatuses[call.id] !== undefined) return orderStatuses[call.id];
+    return getStatus(call) === "completed" ? "completed" : "new";
+  };
+
+  const toggleStatus = async (call) => {
+    const current = getOrderStatus(call);
+    const next = current === "new" ? "completed" : "new";
+    setOrderStatuses(prev => ({ ...prev, [call.id]: next }));
+    try {
+      await fetch(`${API_BASE}/calls/${call.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: next }),
+      });
+    } catch (err) {
+      console.error("[API] Failed to update order status:", err);
+      setOrderStatuses(prev => ({ ...prev, [call.id]: current }));
+    }
+  };
+
+  const fmtTime = (ts) => {
+    if (!ts) return "—";
+    const d = new Date(ts);
+    if (d.toDateString() === new Date().toDateString()) {
+      return "Today, " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+    }
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) +
+      ", " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  };
+
+  return (
+    <div>
+      <div style={{ marginBottom: 28 }}>
+        <h1 style={{ margin: 0, fontSize: 22, fontWeight: 500, color: P.text }}>Orders</h1>
+        <p style={{ margin: "4px 0 0", fontSize: 13, color: P.muted }}>
+          {orders.length} order{orders.length !== 1 ? "s" : ""} received
+        </p>
+      </div>
+
+      {orders.length === 0 ? (
+        <SectionCard>
+          <p style={{ textAlign: "center", color: P.muted, fontSize: 13, padding: "24px 0" }}>No orders yet</p>
+        </SectionCard>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 14 }}>
+          {orders.map(call => {
+            const status = getOrderStatus(call);
+            const isNew = status === "new";
+            const badge = isNew
+              ? { bg: P.amber50,  text: P.amber800, dot: "#EF9F27" }
+              : { bg: P.teal50,   text: P.teal800,  dot: "#1D9E75" };
+
+            return (
+              <div key={call.id} style={{
+                background: "#fff", border: `0.5px solid ${P.border}`,
+                borderRadius: 14, padding: "20px",
+                display: "flex", flexDirection: "column", gap: 14,
+              }}>
+                {/* Header */}
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: P.text }}>Order #{call.id}</p>
+                    <p style={{ margin: "3px 0 0", fontSize: 12, color: P.muted }}>{fmtTime(call.created_at)}</p>
+                  </div>
+                  <span style={{
+                    display: "inline-flex", alignItems: "center", gap: 5,
+                    fontSize: 12, fontWeight: 500, padding: "4px 10px",
+                    borderRadius: 999, background: badge.bg, color: badge.text,
+                  }}>
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: badge.dot, display: "inline-block" }} />
+                    {isNew ? "New" : "Completed"}
+                  </span>
+                </div>
+
+                {/* Order summary */}
+                <div style={{ background: P.bg, borderRadius: 10, padding: "12px 14px" }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 500, color: P.muted, letterSpacing: "0.04em" }}>ORDER SUMMARY</p>
+                  <p style={{ margin: 0, fontSize: 13, color: P.text, lineHeight: 1.6 }}>{call.order_summary}</p>
+                </div>
+
+                {/* Phone */}
+                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                    <path d="M3.5 2h2.25l1 3-1.5 1a8 8 0 0 0 4.75 4.75l1-1.5 3 1V12.5a1.5 1.5 0 0 1-1.5 1.5C5.2 14 2 10.8 2 3.5A1.5 1.5 0 0 1 3.5 2z" fill="#aaa"/>
+                  </svg>
+                  <span style={{ fontSize: 13, color: "#666" }}>{call.phone_number || "—"}</span>
+                </div>
+
+                {/* Toggle button */}
+                <button
+                  onClick={() => toggleStatus(call)}
+                  style={{
+                    padding: "9px 0", borderRadius: 8, border: "none", cursor: "pointer",
+                    fontSize: 13, fontWeight: 500,
+                    background: isNew ? P.purple400 : P.faint,
+                    color: isNew ? "#fff" : P.muted,
+                  }}
+                >
+                  {isNew ? "Mark as completed" : "Mark as new"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── NAV ─────────────────────────────────────────────────────────────────────
 const NAV = [
   { id: "Dashboard", icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.9"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.4"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.4"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity="0.4"/></svg> },
   { id: "Calls",     icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3.5 2h2.25l1 3-1.5 1a8 8 0 0 0 4.75 4.75l1-1.5 3 1V12.5a1.5 1.5 0 0 1-1.5 1.5C5.2 14 2 10.8 2 3.5A1.5 1.5 0 0 1 3.5 2z" fill="currentColor" opacity="0.7"/></svg> },
   { id: "Analytics", icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="9" width="3" height="6" rx="1" fill="currentColor" opacity="0.5"/><rect x="6" y="5" width="3" height="10" rx="1" fill="currentColor" opacity="0.7"/><rect x="11" y="1" width="3" height="14" rx="1" fill="currentColor" opacity="0.9"/></svg> },
+  { id: "Orders",    icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="4" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.5" opacity="0.8"/><path d="M5 4V3a3 3 0 0 1 6 0v1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M5 8h6M5 11h4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/></svg> },
   { id: "Settings",  icon: <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="2.5" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg> },
 ];
 
@@ -670,6 +787,7 @@ export default function App() {
         {page === "Dashboard" && <DashboardPage calls={calls} analytics={analytics} />}
         {page === "Calls"     && <CallsPage     calls={calls} />}
         {page === "Analytics" && <AnalyticsPage calls={calls} analytics={analytics} />}
+        {page === "Orders"    && <OrdersPage    calls={calls} />}
         {page === "Settings"  && <SettingsPage />}
       </div>
     </div>
