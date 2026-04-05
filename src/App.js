@@ -71,9 +71,7 @@ function inferOutcome(call) {
   return "inquiry";
 }
 
-function cleanSummary(text) {
-  return (text || "").replace(/\*\*/g, "").replace(/\*/g, "").trim();
-}
+const cleanText = (text) => text ? text.replace(/\*\*/g, '').replace(/\*/g, '') : '';
 
 // ─── SHARED UI ───────────────────────────────────────────────────────────────
 function Pill({ status }) {
@@ -623,7 +621,7 @@ function OrdersPage({ calls }) {
                 <div style={{ background: T.bg, borderRadius: 8, padding: "12px 14px" }}>
                   <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>Items</p>
                   <p style={{ margin: 0, fontSize: 13, color: T.text, lineHeight: 1.65 }}>
-                    {cleanSummary(call.order_summary)}
+                    {cleanText(call.order_summary)}
                   </p>
                 </div>
 
