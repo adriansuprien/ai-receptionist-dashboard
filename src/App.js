@@ -19,41 +19,44 @@ const fetchWithRetry = async (url, retries = 3, delay = 2000) => {
 
 // ─── THEME ───────────────────────────────────────────────────────────────────
 const T = {
-  // Greens (primary accent)
-  green50:   "#F2F7EC",
-  green100:  "#DFF0C8",
-  green600:  "#3B6D11",
-  green700:  "#2E5509",
-  // Status colors
-  amber50:   "#FFFBF0",
-  amber600:  "#92570A",
-  red50:     "#FEF2F2",
-  red600:    "#991B1B",
-  teal50:    "#F0FBF6",
-  teal600:   "#0D6647",
-  // Neutrals
-  bg:        "#F9FAFB",
-  surface:   "#FFFFFF",
-  border:    "#E5E7EB",
-  borderFaint: "#F3F4F6",
-  text:      "#111827",
-  textSub:   "#6B7280",
-  textMuted: "#9CA3AF",
+  // Orange accent
+  orange:       "#E8671A",
+  orangeHover:  "#D05A14",
+  orange10:     "#FDF3EC",
+  orange20:     "#FAE3D0",
+  // Backgrounds
+  bg:           "#F5F0E8",
+  surface:      "#FFFFFF",
+  surfaceWarm:  "#FAF7F2",
+  // Borders
+  border:       "#E8E0D4",
+  borderFaint:  "#F0EBE3",
+  // Text
+  text:         "#2C1810",
+  textSub:      "#7A6458",
+  textMuted:    "#A89080",
+  // Status
+  red50:        "#FEF2F2",
+  red700:       "#B91C1C",
+  amber50:      "#FFFBF0",
+  amber700:     "#B45309",
+  teal50:       "#F0FBF7",
+  teal700:      "#0F6648",
 };
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 const STATUS_STYLE = {
-  completed: { dot: "#059669", bg: T.teal50,  text: T.teal600  },
-  pending:   { dot: "#D97706", bg: T.amber50, text: T.amber600 },
-  missed:    { dot: "#DC2626", bg: T.red50,   text: T.red600   },
-  failed:    { dot: "#DC2626", bg: T.red50,   text: T.red600   },
+  completed: { dot: "#0F9E6A", bg: T.teal50,  text: T.teal700  },
+  pending:   { dot: "#D97706", bg: T.amber50, text: T.amber700 },
+  missed:    { dot: "#DC2626", bg: T.red50,   text: T.red700   },
+  failed:    { dot: "#DC2626", bg: T.red50,   text: T.red700   },
 };
 
 const OUTCOME_STYLE = {
-  "order placed":       { bg: T.green50,  text: T.green600, dot: "#4D8A16" },
-  "missed opportunity": { bg: T.red50,    text: T.red600,   dot: "#DC2626" },
-  "inquiry":            { bg: T.amber50,  text: T.amber600, dot: "#D97706" },
-  "spam":               { bg: "#F9FAFB",  text: "#6B7280",  dot: "#9CA3AF" },
+  "order placed":       { bg: T.orange10, text: T.orange,  dot: T.orange  },
+  "missed opportunity": { bg: T.red50,    text: T.red700,  dot: "#DC2626" },
+  "inquiry":            { bg: T.amber50,  text: T.amber700,dot: "#D97706" },
+  "spam":               { bg: T.surfaceWarm, text: T.textMuted, dot: T.textMuted },
 };
 
 function getStatus(call) {
@@ -71,7 +74,8 @@ function inferOutcome(call) {
   return "inquiry";
 }
 
-const cleanText = (text) => text ? text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#/g, '') : '';
+const cleanText = (text) =>
+  text ? text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/#/g, "") : "";
 
 const splitOrderItems = (text) => {
   if (!text) return [];
@@ -87,7 +91,7 @@ function Pill({ status }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
       <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.dot, flexShrink: 0 }} />
-      <span style={{ fontSize: 12, fontWeight: 500, padding: "2px 8px", borderRadius: 999, background: s.bg, color: s.text }}>
+      <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: s.bg, color: s.text, letterSpacing: "0.02em" }}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     </span>
@@ -97,7 +101,7 @@ function Pill({ status }) {
 function OutcomeBadge({ outcome }) {
   const s = OUTCOME_STYLE[outcome] || OUTCOME_STYLE["inquiry"];
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: 500, padding: "3px 10px", borderRadius: 999, background: s.bg, color: s.text }}>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: s.bg, color: s.text, letterSpacing: "0.02em" }}>
       <span style={{ width: 6, height: 6, borderRadius: "50%", background: s.dot, flexShrink: 0 }} />
       {outcome.charAt(0).toUpperCase() + outcome.slice(1)}
     </span>
@@ -106,17 +110,22 @@ function OutcomeBadge({ outcome }) {
 
 function StatCard({ label, value, sub }) {
   return (
-    <div style={{ flex: 1, background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "20px 24px" }}>
-      <p style={{ fontSize: 12, color: T.textMuted, margin: "0 0 8px", fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>{label}</p>
-      <p style={{ fontSize: 30, fontWeight: 600, margin: 0, color: T.text, letterSpacing: "-0.02em" }}>{value}</p>
-      {sub && <p style={{ fontSize: 12, color: T.textMuted, margin: "4px 0 0" }}>{sub}</p>}
+    <div style={{
+      flex: 1, background: T.surface,
+      border: `1px solid ${T.border}`,
+      borderRadius: 12, padding: "20px 24px",
+      boxShadow: "0 1px 4px rgba(44,24,16,0.06)",
+    }}>
+      <p style={{ fontSize: 11, color: T.textMuted, margin: "0 0 10px", fontWeight: 600, letterSpacing: "0.07em", textTransform: "uppercase" }}>{label}</p>
+      <p style={{ fontSize: 32, fontWeight: 700, margin: 0, color: T.text, letterSpacing: "-0.03em", lineHeight: 1 }}>{value}</p>
+      {sub && <p style={{ fontSize: 12, color: T.textMuted, margin: "6px 0 0" }}>{sub}</p>}
     </div>
   );
 }
 
 function Avatar({ name, size = 28 }) {
   return (
-    <div style={{ width: size, height: size, borderRadius: "50%", background: T.green50, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.38, fontWeight: 600, color: T.green600, flexShrink: 0 }}>
+    <div style={{ width: size, height: size, borderRadius: "50%", background: T.orange10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.38, fontWeight: 700, color: T.orange, flexShrink: 0 }}>
       {(name || "?").slice(0, 2).toUpperCase()}
     </div>
   );
@@ -124,9 +133,39 @@ function Avatar({ name, size = 28 }) {
 
 function Card({ children, style }) {
   return (
-    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "24px", ...style }}>
+    <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, padding: "24px", boxShadow: "0 1px 4px rgba(44,24,16,0.05)", ...style }}>
       {children}
     </div>
+  );
+}
+
+function OrangeBtn({ label, onClick, style }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: "10px 0", borderRadius: 8, border: "none",
+      background: T.orange, color: "#fff",
+      cursor: "pointer", fontSize: 13, fontWeight: 600,
+      width: "100%", transition: "background 0.15s",
+      ...style,
+    }}
+      onMouseEnter={e => e.currentTarget.style.background = T.orangeHover}
+      onMouseLeave={e => e.currentTarget.style.background = T.orange}
+    >
+      {label}
+    </button>
+  );
+}
+
+function GhostBtn({ label, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      padding: "10px 0", borderRadius: 8,
+      border: `1px solid ${T.border}`,
+      background: "transparent", color: T.textSub,
+      cursor: "pointer", fontSize: 13, fontWeight: 500, width: "100%",
+    }}>
+      {label}
+    </button>
   );
 }
 
@@ -134,7 +173,7 @@ function Toggle({ checked, onChange }) {
   return (
     <div
       onClick={() => onChange(!checked)}
-      style={{ width: 38, height: 22, borderRadius: 999, background: checked ? T.green600 : T.border, cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}
+      style={{ width: 38, height: 22, borderRadius: 999, background: checked ? T.orange : T.border, cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}
     >
       <div style={{ position: "absolute", top: 3, left: checked ? 19 : 3, width: 16, height: 16, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
     </div>
@@ -191,11 +230,11 @@ function CallDetailModal({ call, onClose }) {
   return (
     <div
       onClick={onClose}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.3)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}
+      style={{ position: "fixed", inset: 0, background: "rgba(44,24,16,0.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 20 }}
     >
       <div
         onClick={e => e.stopPropagation()}
-        style={{ background: T.surface, borderRadius: 16, width: 560, maxWidth: "100%", maxHeight: "90vh", overflowY: "auto", border: `1px solid ${T.border}`, boxShadow: "0 20px 60px rgba(0,0,0,0.12)" }}
+        style={{ background: T.surface, borderRadius: 16, width: 560, maxWidth: "100%", maxHeight: "90vh", overflowY: "auto", border: `1px solid ${T.border}`, boxShadow: "0 24px 64px rgba(44,24,16,0.16)" }}
       >
         {/* Header */}
         <div style={{ padding: "24px 24px 20px", borderBottom: `1px solid ${T.borderFaint}` }}>
@@ -203,7 +242,7 @@ function CallDetailModal({ call, onClose }) {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Avatar name={call.customer_name} size={44} />
               <div>
-                <p style={{ margin: 0, fontSize: 17, fontWeight: 600, color: T.text }}>{call.customer_name || "Unknown"}</p>
+                <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: T.text }}>{call.customer_name || "Unknown"}</p>
                 <p style={{ margin: "2px 0 0", fontSize: 13, color: T.textSub }}>{call.phone_number || "No phone"}</p>
               </div>
             </div>
@@ -219,8 +258,8 @@ function CallDetailModal({ call, onClose }) {
               ["Duration",    call.duration ? `${call.duration} min` : "—"],
               ["Call ID",     call.id ? `#${call.id}` : "—"],
             ].map(([k, v]) => (
-              <div key={k} style={{ background: T.bg, borderRadius: 8, padding: "10px 12px" }}>
-                <p style={{ margin: "0 0 2px", fontSize: 11, color: T.textMuted, fontWeight: 500, letterSpacing: "0.04em", textTransform: "uppercase" }}>{k}</p>
+              <div key={k} style={{ background: T.surfaceWarm, borderRadius: 8, padding: "10px 12px" }}>
+                <p style={{ margin: "0 0 2px", fontSize: 11, color: T.textMuted, fontWeight: 600, letterSpacing: "0.06em", textTransform: "uppercase" }}>{k}</p>
                 <p style={{ margin: 0, fontSize: 13, color: T.text, fontWeight: 500 }}>{v}</p>
               </div>
             ))}
@@ -230,7 +269,7 @@ function CallDetailModal({ call, onClose }) {
         {/* Transcript */}
         <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.borderFaint}` }}>
           <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>Transcript</p>
-          <div style={{ background: T.bg, borderRadius: 10, padding: "14px 16px", fontSize: 13, color: "#374151", lineHeight: 1.7, maxHeight: 180, overflowY: "auto", border: `1px solid ${T.borderFaint}` }}>
+          <div style={{ background: T.surfaceWarm, borderRadius: 10, padding: "14px 16px", fontSize: 13, color: T.textSub, lineHeight: 1.7, maxHeight: 180, overflowY: "auto", border: `1px solid ${T.borderFaint}` }}>
             {call.transcript || "No transcript available for this call."}
           </div>
         </div>
@@ -264,9 +303,9 @@ function CallDetailModal({ call, onClose }) {
         <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.borderFaint}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>AI Insights</p>
-            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: T.green50, color: T.green600, fontWeight: 500 }}>Coming soon</span>
+            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: T.orange10, color: T.orange, fontWeight: 600 }}>Coming soon</span>
           </div>
-          <div style={{ background: T.bg, borderRadius: 10, padding: "14px 16px", border: `1px dashed ${T.border}` }}>
+          <div style={{ background: T.surfaceWarm, borderRadius: 10, padding: "14px 16px", border: `1px dashed ${T.border}` }}>
             <p style={{ margin: 0, fontSize: 13, color: T.textMuted, fontStyle: "italic" }}>
               Auto-generated insights will appear here once full transcripts are available.
             </p>
@@ -278,13 +317,13 @@ function CallDetailModal({ call, onClose }) {
           <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>Actions</p>
           <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
             {[
-              { label: "Call back",         color: T.text,     onClick: () => call.phone_number && (window.location.href = `tel:${call.phone_number}`) },
-              { label: markedOrder ? "Marked!" : "Mark as order", color: T.green600, onClick: () => setMarkedOrder(true) },
-              { label: "Forward to staff",  color: "#D97706",  onClick: () => alert("Hook up to your backend") },
-            ].map(({ label, color, onClick }) => (
+              { label: "Call back",         onClick: () => call.phone_number && (window.location.href = `tel:${call.phone_number}`) },
+              { label: markedOrder ? "Marked!" : "Mark as order", onClick: () => setMarkedOrder(true) },
+              { label: "Forward to staff",  onClick: () => alert("Hook up to your backend") },
+            ].map(({ label, onClick }) => (
               <button key={label} onClick={onClick} style={{
                 flex: 1, padding: "9px 0", borderRadius: 8, border: `1px solid ${T.border}`,
-                background: "transparent", color, cursor: "pointer", fontSize: 13, fontWeight: 500,
+                background: "transparent", color: T.textSub, cursor: "pointer", fontSize: 13, fontWeight: 500,
               }}>
                 {label}
               </button>
@@ -299,7 +338,7 @@ function CallDetailModal({ call, onClose }) {
             />
             <button
               onClick={handleAddNote}
-              style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: noteAdded ? "#059669" : T.green600, color: "#fff", fontSize: 13, fontWeight: 500, cursor: "pointer" }}
+              style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: noteAdded ? "#0F9E6A" : T.orange, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}
             >
               {noteAdded ? "Saved!" : "Save"}
             </button>
@@ -324,7 +363,7 @@ function DashboardPage({ calls, analytics }) {
   return (
     <div>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: T.text, letterSpacing: "-0.01em" }}>Dashboard</h1>
+        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text, letterSpacing: "-0.02em" }}>Dashboard</h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textMuted }}>
           {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
         </p>
@@ -343,7 +382,7 @@ function DashboardPage({ calls, analytics }) {
       </div>
 
       <Card>
-        <h2 style={{ margin: "0 0 20px", fontSize: 15, fontWeight: 600, color: T.text }}>Recent calls</h2>
+        <h2 style={{ margin: "0 0 20px", fontSize: 15, fontWeight: 700, color: T.text }}>Recent calls</h2>
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
             <col style={{ width: "25%" }} /><col style={{ width: "22%" }} />
@@ -352,7 +391,7 @@ function DashboardPage({ calls, analytics }) {
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.borderFaint}` }}>
               {["Name","Phone","Transcript","Status"].map(h => (
-                <th key={h} style={{ padding: "0 0 12px", textAlign: "left", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>{h}</th>
+                <th key={h} style={{ padding: "0 0 12px", textAlign: "left", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.07em", textTransform: "uppercase" }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -396,7 +435,7 @@ function CallsPage({ calls }) {
   return (
     <div>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: T.text, letterSpacing: "-0.01em" }}>Calls</h1>
+        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text, letterSpacing: "-0.02em" }}>Calls</h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textMuted }}>Full call history — click any row for details</p>
       </div>
 
@@ -409,9 +448,9 @@ function CallsPage({ calls }) {
           />
           {["all","completed","pending","missed"].map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
-              fontSize: 12, padding: "7px 14px", borderRadius: 999, border: "none", cursor: "pointer", fontWeight: 500,
-              background: filter === f ? T.green600 : T.bg,
-              color:      filter === f ? "#fff"      : T.textSub,
+              fontSize: 12, padding: "7px 14px", borderRadius: 999, border: "none", cursor: "pointer", fontWeight: 600,
+              background: filter === f ? T.orange   : T.surfaceWarm,
+              color:      filter === f ? "#fff"     : T.textSub,
             }}>
               {f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
@@ -427,7 +466,7 @@ function CallsPage({ calls }) {
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.borderFaint}` }}>
               {["Name","Phone","Duration","Transcript","Status"].map(h => (
-                <th key={h} style={{ padding: "0 0 12px", textAlign: "left", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>{h}</th>
+                <th key={h} style={{ padding: "0 0 12px", textAlign: "left", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.07em", textTransform: "uppercase" }}>{h}</th>
               ))}
             </tr>
           </thead>
@@ -437,7 +476,7 @@ function CallsPage({ calls }) {
             ) : filtered.map((call, i) => (
               <tr key={i} onClick={() => setSelected(call)}
                 style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${T.borderFaint}` : "none", cursor: "pointer" }}
-                onMouseEnter={e => e.currentTarget.style.background = T.bg}
+                onMouseEnter={e => e.currentTarget.style.background = T.surfaceWarm}
                 onMouseLeave={e => e.currentTarget.style.background = "transparent"}
               >
                 <td style={{ padding: "13px 0" }}>
@@ -494,7 +533,7 @@ function AnalyticsPage({ calls, analytics }) {
   return (
     <div>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: T.text, letterSpacing: "-0.01em" }}>Analytics</h1>
+        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text, letterSpacing: "-0.02em" }}>Analytics</h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textMuted }}>Insights to show your value</p>
       </div>
 
@@ -507,16 +546,16 @@ function AnalyticsPage({ calls, analytics }) {
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
         <Card style={{ flex: 1, minWidth: 220 }}>
-          <h2 style={{ margin: "0 0 20px", fontSize: 15, fontWeight: 600, color: T.text }}>Call outcomes</h2>
+          <h2 style={{ margin: "0 0 20px", fontSize: 15, fontWeight: 700, color: T.text }}>Call outcomes</h2>
           {[
-            { label: "Completed", value: completed, color: "#059669" },
+            { label: "Completed", value: completed, color: "#0F9E6A" },
             { label: "Pending",   value: pending,   color: "#D97706" },
             { label: "Missed",    value: missed,    color: "#DC2626" },
           ].map(item => (
-            <div key={item.label} style={{ marginBottom: 16 }}>
+            <div key={item.label} style={{ marginBottom: 18 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                 <span style={{ fontSize: 13, color: T.text }}>{item.label}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{item.value}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{item.value}</span>
               </div>
               <Bar value={item.value} max={total} color={item.color} />
             </div>
@@ -524,16 +563,16 @@ function AnalyticsPage({ calls, analytics }) {
         </Card>
 
         <Card style={{ flex: 1, minWidth: 220 }}>
-          <h2 style={{ margin: "0 0 20px", fontSize: 15, fontWeight: 600, color: T.text }}>Top customer intents</h2>
+          <h2 style={{ margin: "0 0 20px", fontSize: 15, fontWeight: 700, color: T.text }}>Top customer intents</h2>
           {intents.length === 0 ? (
             <p style={{ fontSize: 13, color: T.textMuted }}>Not enough data yet</p>
           ) : intents.map(([intent, count]) => (
-            <div key={intent} style={{ marginBottom: 16 }}>
+            <div key={intent} style={{ marginBottom: 18 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
                 <span style={{ fontSize: 13, color: T.text, textTransform: "capitalize" }}>{intent}</span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: T.text }}>{count}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{count}</span>
               </div>
-              <Bar value={count} max={maxIntent} color={T.green600} />
+              <Bar value={count} max={maxIntent} color={T.orange} />
             </div>
           ))}
         </Card>
@@ -582,7 +621,7 @@ function OrdersPage({ calls }) {
   return (
     <div>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: T.text, letterSpacing: "-0.01em" }}>Orders</h1>
+        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text, letterSpacing: "-0.02em" }}>Orders</h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textMuted }}>
           {orders.length} order{orders.length !== 1 ? "s" : ""} received
         </p>
@@ -597,38 +636,37 @@ function OrdersPage({ calls }) {
           {orders.map(call => {
             const status = getOrderStatus(call);
             const isNew  = status === "new";
+            const items  = splitOrderItems(call.order_summary);
 
             return (
               <div key={call.id} style={{
                 background: T.surface, border: `1px solid ${T.border}`,
                 borderRadius: 12, padding: "20px",
                 display: "flex", flexDirection: "column", gap: 16,
+                boxShadow: "0 1px 4px rgba(44,24,16,0.05)",
               }}>
-                {/* Header row */}
+                {/* Header */}
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
                   <div>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: T.text }}>Order #{call.id}</p>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>Order #{call.id}</p>
                     <p style={{ margin: "3px 0 0", fontSize: 12, color: T.textMuted }}>{fmtTime(call.created_at)}</p>
                   </div>
+                  {/* Badge */}
                   <span style={{
                     display: "inline-flex", alignItems: "center", gap: 5,
-                    fontSize: 11, fontWeight: 600, padding: "3px 10px",
-                    borderRadius: 999,
-                    background: isNew ? T.amber50  : T.green50,
-                    color:      isNew ? T.amber600 : T.green600,
+                    fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
+                    background: isNew ? T.orange10 : T.surfaceWarm,
+                    color:      isNew ? T.orange   : T.textMuted,
                   }}>
-                    <span style={{
-                      width: 6, height: 6, borderRadius: "50%",
-                      background: isNew ? "#D97706" : "#059669",
-                    }} />
+                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: isNew ? T.orange : T.textMuted }} />
                     {isNew ? "New" : "Completed"}
                   </span>
                 </div>
 
                 {/* Items */}
-                <div style={{ background: T.bg, borderRadius: 8, padding: "12px 14px" }}>
-                  <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>Items</p>
-                  {splitOrderItems(call.order_summary).map((item, i) => (
+                <div style={{ background: T.surfaceWarm, borderRadius: 8, padding: "12px 14px", border: `1px solid ${T.borderFaint}` }}>
+                  <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.07em", textTransform: "uppercase" }}>Items</p>
+                  {items.map((item, i) => (
                     <p key={i} style={{ margin: "0 0 4px", fontSize: 13, color: T.text, lineHeight: 1.5 }}>{item}</p>
                   ))}
                 </div>
@@ -641,21 +679,11 @@ function OrdersPage({ calls }) {
                   <span style={{ fontSize: 13, color: T.textSub }}>{call.phone_number || "—"}</span>
                 </div>
 
-                {/* Toggle */}
-                <button
-                  onClick={() => toggleStatus(call)}
-                  style={{
-                    marginTop: "auto",
-                    padding: "9px 0", borderRadius: 8,
-                    border: `1px solid ${isNew ? T.green600 : T.border}`,
-                    cursor: "pointer", fontSize: 13, fontWeight: 500,
-                    background: isNew ? T.green600 : "transparent",
-                    color:      isNew ? "#fff"     : T.textSub,
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {isNew ? "Mark as completed" : "Mark as new"}
-                </button>
+                {/* Toggle button */}
+                {isNew
+                  ? <OrangeBtn label="Mark as completed" onClick={() => toggleStatus(call)} />
+                  : <GhostBtn  label="Mark as new"       onClick={() => toggleStatus(call)} />
+                }
               </div>
             );
           })}
@@ -687,12 +715,12 @@ function SettingsPage() {
   return (
     <div>
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 600, color: T.text, letterSpacing: "-0.01em" }}>Settings</h1>
+        <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text, letterSpacing: "-0.02em" }}>Settings</h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textMuted }}>Customize how your AI receptionist behaves</p>
       </div>
 
       <Card style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: T.text }}>Business info</h2>
+        <h2 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: T.text }}>Business info</h2>
         <SettingsRow label="Business name" sub="Shown in AI greetings">
           <TInput value={form.businessName} onChange={v => set("businessName", v)} placeholder="e.g. RimReaper Detailing" />
         </SettingsRow>
@@ -705,7 +733,7 @@ function SettingsPage() {
       </Card>
 
       <Card style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: T.text }}>Hours</h2>
+        <h2 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: T.text }}>Hours</h2>
         <SettingsRow label="AI active hours" sub="AI only answers calls during this window">
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <TInput value={form.openTime}  onChange={v => set("openTime", v)}  type="time" />
@@ -716,7 +744,7 @@ function SettingsPage() {
       </Card>
 
       <Card style={{ marginBottom: 28 }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 600, color: T.text }}>Call behavior</h2>
+        <h2 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: T.text }}>Call behavior</h2>
         <SettingsRow label="Take orders" sub="AI can accept and log orders from callers">
           <Toggle checked={form.takeOrders} onChange={v => set("takeOrders", v)} />
         </SettingsRow>
@@ -726,8 +754,10 @@ function SettingsPage() {
       </Card>
 
       <button onClick={save} style={{
-        padding: "10px 24px", borderRadius: 8, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500,
-        background: saved ? "#059669" : T.green600, color: "#fff", transition: "background 0.2s",
+        padding: "10px 24px", borderRadius: 8, border: "none", cursor: "pointer",
+        fontSize: 13, fontWeight: 600,
+        background: saved ? "#0F9E6A" : T.orange,
+        color: "#fff", transition: "background 0.2s",
       }}>
         {saved ? "Saved!" : "Save settings"}
       </button>
@@ -763,12 +793,12 @@ export default function App() {
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: T.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" }}>
       {/* Sidebar */}
-      <div style={{ width: 216, background: T.surface, borderRight: `1px solid ${T.border}`, padding: "24px 12px", display: "flex", flexDirection: "column", gap: 1, flexShrink: 0 }}>
+      <div style={{ width: 216, background: T.bg, borderRight: `1px solid ${T.border}`, padding: "24px 12px", display: "flex", flexDirection: "column", gap: 1, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 28, paddingLeft: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: T.green600, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: T.orange, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1a5.5 5.5 0 0 0-5.5 5.5c0 1.8.87 3.4 2.2 4.4L4 14l3-1.5a5.5 5.5 0 1 0 1-11.5z" fill="white" opacity="0.95"/></svg>
           </div>
-          <span style={{ fontWeight: 600, fontSize: 14, color: T.text, letterSpacing: "-0.01em" }}>AI Receptionist</span>
+          <span style={{ fontWeight: 700, fontSize: 14, color: T.text, letterSpacing: "-0.01em" }}>AI Receptionist</span>
         </div>
 
         {NAV.map(({ id, icon }) => {
@@ -777,11 +807,11 @@ export default function App() {
             <button key={id} onClick={() => setPage(id)} style={{
               display: "flex", alignItems: "center", gap: 9, padding: "8px 10px", borderRadius: 7,
               border: "none", cursor: "pointer", fontSize: 13, textAlign: "left", width: "100%",
-              fontWeight:  active ? 500 : 400,
-              background:  active ? T.green50  : "transparent",
-              color:       active ? T.green700  : T.textSub,
+              fontWeight:  active ? 600 : 400,
+              background:  active ? T.orange20   : "transparent",
+              color:       active ? T.orangeHover : T.textSub,
             }}>
-              <span style={{ color: active ? T.green600 : T.textMuted, display: "flex", flexShrink: 0 }}>{icon}</span>
+              <span style={{ color: active ? T.orange : T.textMuted, display: "flex", flexShrink: 0 }}>{icon}</span>
               {id}
             </button>
           );
@@ -789,9 +819,9 @@ export default function App() {
 
         <div style={{ marginTop: "auto", paddingTop: 20, borderTop: `1px solid ${T.border}` }}>
           <div style={{ display: "flex", alignItems: "center", gap: 9, paddingLeft: 2 }}>
-            <div style={{ width: 30, height: 30, borderRadius: "50%", background: T.green50, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, color: T.green600 }}>AD</div>
+            <div style={{ width: 30, height: 30, borderRadius: "50%", background: T.orange10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: T.orange }}>AD</div>
             <div>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 500, color: T.text }}>Admin</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: T.text }}>Admin</p>
               <p style={{ margin: 0, fontSize: 11, color: T.textMuted }}>Owner</p>
             </div>
           </div>
