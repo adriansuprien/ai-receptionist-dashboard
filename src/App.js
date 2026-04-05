@@ -71,7 +71,15 @@ function inferOutcome(call) {
   return "inquiry";
 }
 
-const cleanText = (text) => text ? text.replace(/\*\*/g, '').replace(/\*/g, '') : '';
+const cleanText = (text) => text ? text.replace(/\*\*/g, '').replace(/\*/g, '').replace(/#/g, '') : '';
+
+const splitOrderItems = (text) => {
+  if (!text) return [];
+  return cleanText(text)
+    .split(/\n| - /)
+    .map(s => s.trim())
+    .filter(Boolean);
+};
 
 // ─── SHARED UI ───────────────────────────────────────────────────────────────
 function Pill({ status }) {
@@ -542,7 +550,7 @@ function OrdersPage({ calls }) {
 
   const getOrderStatus = (call) => {
     if (orderStatuses[call.id] !== undefined) return orderStatuses[call.id];
-    return getStatus(call) === "completed" ? "completed" : "new";
+    return call.order_status === "completed" ? "completed" : "new";
   };
 
   const toggleStatus = async (call) => {
@@ -620,9 +628,9 @@ function OrdersPage({ calls }) {
                 {/* Items */}
                 <div style={{ background: T.bg, borderRadius: 8, padding: "12px 14px" }}>
                   <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>Items</p>
-                  <p style={{ margin: 0, fontSize: 13, color: T.text, lineHeight: 1.65 }}>
-                    {cleanText(call.order_summary)}
-                  </p>
+                  {splitOrderItems(call.order_summary).map((item, i) => (
+                    <p key={i} style={{ margin: "0 0 4px", fontSize: 13, color: T.text, lineHeight: 1.5 }}>{item}</p>
+                  ))}
                 </div>
 
                 {/* Phone */}
