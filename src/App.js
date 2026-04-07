@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 const API_BASE = "https://ai-receptionist-backend-ol57.onrender.com";
@@ -793,12 +793,12 @@ export default function App() {
       .catch(err => console.error("[API] All retries failed for /calls:", err));
   };
 
-  const refreshData = () => {
+  const refreshData = useCallback(() => {
     refreshCalls();
     fetchWithRetry(`${API_BASE}/analytics`)
       .then(data => setAnalytics(data))
       .catch(err => console.error("[API] All retries failed for /analytics:", err));
-  };
+  }, []);
 
   useEffect(() => {
     refreshData();
