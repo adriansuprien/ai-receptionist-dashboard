@@ -611,8 +611,10 @@ function OrdersPage({ calls, refreshCalls }) {
             };
 
             const EMPTY_VALUES = ["not provided", "none mentioned", "not specified"];
-            const normalize = (val) =>
-              (!val || EMPTY_VALUES.includes(val.toLowerCase())) ? "—" : val;
+            const normalize = (val) => {
+              const cleaned = val ? val.replace(/^[\*\-\s]+|[\*\-\s]+$/g, "").trim() : "";
+              return (!cleaned || EMPTY_VALUES.includes(cleaned.toLowerCase())) ? "—" : cleaned;
+            };
 
             const rawItem   = extractField([/Items Ordered:\*\*\s*(.+?)(?:\n|$)/i, /Items?:\*\*\s*(.+?)(?:\n|$)/i, /Items?:\s*(.+?)(?:\n|$)/i]);
             const rawPickup = extractField([/Pickup Time:\*\*\s*(.+?)(?:\n|$)/i, /Pickup Time:\s*(.+?)(?:\n|$)/i]);
