@@ -103,9 +103,6 @@ function inferOutcome(call) {
   return "inquiry";
 }
 
-const cleanText = (text) =>
-  text ? text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/#/g, "") : "";
-
 // ─── SHARED UI ───────────────────────────────────────────────────────────────
 function Pill({ status }) {
   const s = STATUS_STYLE[status] || STATUS_STYLE.pending;
@@ -603,7 +600,7 @@ function OrdersPage({ calls, refreshCalls }) {
           {orders.map(call => {
             const status = getOrderStatus(call);
             const isNew  = status === "new";
-            const raw    = cleanText(call.order_summary || "");
+            const raw    = call.order_summary || "";
 
             const extractField = (patterns) => {
               for (const re of patterns) {
@@ -613,9 +610,19 @@ function OrdersPage({ calls, refreshCalls }) {
               return null;
             };
 
-            const item   = extractField([/Items?:\s*(.+)/i, /Item ordered:\s*(.+)/i]);
-            const pickup = extractField([/Pickup Time:\s*(.+)/i, /Requested Pickup.*?:\s*(.+)/i]);
-            const issue  = extractField([/Status:\s*(.+)/i]);
+            const EMPTY_VALUES = ["not provided", "none mentioned", "not specified"];
+            const normalize = (val) =>
+              (!val || EMPTY_VALUES.includes(val.toLowerCase())) ? "—" : val;
+
+            const rawItem   = extractField([/Items Ordered:\*\*\s*(.+?)(?:\n|$)/i, /Items?:\*\*\s*(.+?)(?:\n|$)/i, /Items?:\s*(.+?)(?:\n|$)/i]);
+            const rawPickup = extractField([/Pickup Time:\*\*\s*(.+?)(?:\n|$)/i, /Pickup Time:\s*(.+?)(?:\n|$)/i]);
+            const rawName   = extractField([/Customer Name:\*\*\s*(.+?)(?:\n|$)/i, /Customer Name:\s*(.+?)(?:\n|$)/i]);
+            const rawPhone  = extractField([/Phone Number:\*\*\s*(.+?)(?:\n|$)/i, /Phone Number:\s*(.+?)(?:\n|$)/i]);
+
+            const itemVal   = normalize(rawItem);
+            const pickupVal = normalize(rawPickup);
+            const nameVal   = normalize(rawName)   !== "—" ? normalize(rawName)   : (call.customer_name || "—");
+            const phoneVal  = normalize(rawPhone)  !== "—" ? normalize(rawPhone)  : (call.phone_number  || "—");
 
             return (
               <div key={call.id} style={{
@@ -644,23 +651,16 @@ function OrdersPage({ calls, refreshCalls }) {
                 {/* Parsed fields */}
                 <div style={{ background: T.surfaceWarm, borderRadius: 8, padding: "12px 14px", border: `1px solid ${T.borderFaint}`, display: "flex", flexDirection: "column", gap: 8 }}>
                   {[
-                    { label: "Item",   value: item   || "See transcript" },
-                    { label: "Pickup", value: pickup || "Not specified"  },
-                    ...(issue ? [{ label: "Issue", value: issue }] : []),
+                    { label: "Name",   value: nameVal   },
+                    { label: "Phone",  value: phoneVal  },
+                    { label: "Item",   value: itemVal   },
+                    { label: "Pickup", value: pickupVal },
                   ].map(({ label, value }) => (
                     <div key={label} style={{ display: "flex", gap: 8 }}>
                       <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.05em", textTransform: "uppercase", width: 48, flexShrink: 0, paddingTop: 1 }}>{label}</span>
                       <span style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{value}</span>
                     </div>
                   ))}
-                </div>
-
-                {/* Phone */}
-                <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                    <path d="M3.5 2h2.25l1 3-1.5 1a8 8 0 0 0 4.75 4.75l1-1.5 3 1V12.5a1.5 1.5 0 0 1-1.5 1.5C5.2 14 2 10.8 2 3.5A1.5 1.5 0 0 1 3.5 2z" fill={T.textMuted}/>
-                  </svg>
-                  <span style={{ fontSize: 13, color: T.textSub }}>{call.phone_number || "—"}</span>
                 </div>
 
                 {/* Toggle button */}
