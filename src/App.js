@@ -65,10 +65,37 @@ function getStatus(call) {
   return "pending";
 }
 
+function isOrderCall(call) {
+  const summary = (call.order_summary || call.transcript || "").toLowerCase();
+  const status  = (call.order_status || "").toLowerCase();
+
+  const noOrderPhrases = [
+    "no order", "no order placed", "no order was placed",
+    "did not place", "didn't place", "only shows the greeting",
+    "only the greeting", "conversation only shows",
+    "no items were ordered", "no items ordered",
+    "no order completed", "no order was completed",
+    "no food", "no purchase",
+  ];
+  if (noOrderPhrases.some(p => summary.includes(p))) return false;
+
+  if (["inquiry", "missed", "failed", "cancelled"].includes(status)) return false;
+
+  const foodWords = ["chicken", "lamb", "beef", "rice", "gyro", "platter",
+    "combo", "falafel", "shawarma", "burger", "wrap", "kebab", "naan", "biryani"];
+  const confirmWords = ["confirmed", "placed", "will be ready", "pickup at",
+    "ordered", "got it", "sounds good", "all set", "we'll have", "see you at"];
+
+  const hasFood    = foodWords.some(w => summary.includes(w));
+  const hasConfirm = confirmWords.some(w => summary.includes(w));
+
+  return hasFood && hasConfirm;
+}
+
 function inferOutcome(call) {
   if (call.outcome) return call.outcome.toLowerCase();
+  if (isOrderCall(call)) return "order placed";
   const t = (call.transcript || "").toLowerCase();
-  if (t.includes("order") || t.includes("placed") || t.includes("confirm")) return "order placed";
   if (t.includes("missed") || t.includes("no answer") || t.includes("voicemail")) return "missed opportunity";
   if (t.includes("spam") || t.includes("robo")) return "spam";
   return "inquiry";
@@ -702,14 +729,36 @@ function SettingsPage() {
   });
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/settings`);
+        const data = await res.json();
+        setForm(prev => ({ ...prev, ...data }));
+      } catch (err) {
+        console.error("[API] Failed to load settings:", err);
+      }
+    })();
+  }, []);
+
   const set = (key, val) => {
     setForm(prev => ({ ...prev, [key]: val }));
     setSaved(false);
   };
 
-  const save = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2500);
+  const save = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      console.error("[API] Failed to save settings:", err);
+    }
   };
 
   return (
