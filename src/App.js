@@ -721,14 +721,15 @@ function OrdersPage({ calls }) {
 }
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
+const SETTINGS_DEFAULTS = {
+  businessName: "", greeting: "", forwardNumber: "",
+  openTime: "09:00", closeTime: "17:00",
+  takeOrders: true, bookAppointments: false,
+};
+
 function SettingsPage() {
-  const defaults = {
-    businessName: "", greeting: "", forwardNumber: "",
-    openTime: "09:00", closeTime: "17:00",
-    takeOrders: true, bookAppointments: false,
-  };
-  const [form,      setForm]      = useState(defaults);
-  const [savedForm, setSavedForm] = useState(defaults);
+  const [form,      setForm]      = useState(SETTINGS_DEFAULTS);
+  const [savedForm, setSavedForm] = useState(SETTINGS_DEFAULTS);
   const [dirty,     setDirty]     = useState(false);
   const [saved,     setSaved]     = useState(false);
 
@@ -737,7 +738,7 @@ function SettingsPage() {
       try {
         const res = await fetch(`${API_BASE}/settings`);
         const data = await res.json();
-        const merged = { ...defaults, ...data };
+        const merged = { ...SETTINGS_DEFAULTS, ...data };
         setForm(merged);
         setSavedForm(merged);
         setDirty(false);
