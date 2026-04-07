@@ -809,7 +809,7 @@ export default function App() {
 
     const interval = setInterval(refreshData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshData]);
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: T.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" }}>
