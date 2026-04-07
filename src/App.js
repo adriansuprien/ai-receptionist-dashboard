@@ -547,7 +547,7 @@ function AnalyticsPage({ calls, analytics }) {
 }
 
 // ─── ORDERS ──────────────────────────────────────────────────────────────────
-function OrdersPage({ calls }) {
+function OrdersPage({ calls, refreshCalls }) {
   const [orderStatuses, setOrderStatuses] = useState({});
 
   const orders = calls.filter(c => c.order_summary && c.order_summary.trim() && c.order_status !== "completed");
@@ -569,6 +569,7 @@ function OrdersPage({ calls }) {
       console.log("PATCH response:", res.status);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setOrderStatuses(prev => ({ ...prev, [call.id]: next }));
+      refreshCalls();
     } catch (err) {
       console.error("[API] Failed to update order status:", err);
     }
@@ -786,10 +787,14 @@ export default function App() {
   const [page,      setPage]      = useState("Dashboard");
   const [settings,  setSettings]  = useState({ restaurantName: "AI Receptionist", phoneNumber: "" });
 
-  useEffect(() => {
+  const refreshCalls = () => {
     fetchWithRetry(`${API_BASE}/calls`)
       .then(data => setCalls(data))
       .catch(err => console.error("[API] All retries failed for /calls:", err));
+  };
+
+  useEffect(() => {
+    refreshCalls();
 
     fetchWithRetry(`${API_BASE}/analytics`)
       .then(data => setAnalytics(data))
@@ -843,7 +848,7 @@ export default function App() {
         {page === "Dashboard" && <DashboardPage calls={calls} analytics={analytics} />}
         {page === "Calls"     && <CallsPage     calls={calls} />}
         {page === "Analytics" && <AnalyticsPage calls={calls} analytics={analytics} />}
-        {page === "Orders"    && <OrdersPage    calls={calls} />}
+        {page === "Orders"    && <OrdersPage    calls={calls} refreshCalls={refreshCalls} />}
         {page === "Settings"  && <SettingsPage />}
       </div>
     </div>
