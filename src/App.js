@@ -394,18 +394,18 @@ function DashboardPage({ calls, analytics }) {
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
             <col style={{ width: "25%" }} /><col style={{ width: "22%" }} />
-            <col style={{ width: "38%" }} /><col style={{ width: "15%" }} />
+            <col style={{ width: "53%" }} />
           </colgroup>
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.borderFaint}` }}>
-              {["Name","Phone","Transcript","Status"].map(h => (
+              {["Name","Phone","Transcript"].map(h => (
                 <th key={h} style={{ padding: "0 0 12px", textAlign: "left", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.07em", textTransform: "uppercase" }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {recent.length === 0 ? (
-              <tr><td colSpan={4} style={{ padding: "32px 0", textAlign: "center", fontSize: 13, color: T.textMuted }}>No calls yet</td></tr>
+              <tr><td colSpan={3} style={{ padding: "32px 0", textAlign: "center", fontSize: 13, color: T.textMuted }}>No calls yet</td></tr>
             ) : recent.map((call, i) => (
               <tr key={i} style={{ borderBottom: i < recent.length - 1 ? `1px solid ${T.borderFaint}` : "none" }}>
                 <td style={{ padding: "13px 0" }}>
@@ -416,7 +416,6 @@ function DashboardPage({ calls, analytics }) {
                 </td>
                 <td style={{ padding: "13px 0", fontSize: 13, color: T.textSub }}>{call.phone_number || "—"}</td>
                 <td style={{ padding: "13px 12px 13px 0", fontSize: 13, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 0 }}>{call.transcript || "—"}</td>
-                <td style={{ padding: "13px 0" }}><Pill status={getStatus(call)} /></td>
               </tr>
             ))}
           </tbody>
@@ -578,18 +577,17 @@ function OrdersPage({ calls }) {
   };
 
   const toggleStatus = async (call) => {
-    const current = getOrderStatus(call);
-    const next = current === "new" ? "completed" : "new";
-    setOrderStatuses(prev => ({ ...prev, [call.id]: next }));
+    const next = getOrderStatus(call) === "new" ? "completed" : "new";
     try {
-      await fetch(`${API_BASE}/calls/${call.id}/status`, {
+      const res = await fetch(`${API_BASE}/calls/${call.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: next }),
       });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setOrderStatuses(prev => ({ ...prev, [call.id]: next }));
     } catch (err) {
       console.error("[API] Failed to update order status:", err);
-      setOrderStatuses(prev => ({ ...prev, [call.id]: current }));
     }
   };
 
