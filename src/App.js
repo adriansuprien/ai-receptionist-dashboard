@@ -177,19 +177,6 @@ function OrangeBtn({ label, onClick, style }) {
   );
 }
 
-function GhostBtn({ label, onClick }) {
-  return (
-    <button onClick={onClick} style={{
-      padding: "10px 0", borderRadius: 8,
-      border: `1px solid ${T.border}`,
-      background: "transparent", color: T.textSub,
-      cursor: "pointer", fontSize: 13, fontWeight: 500, width: "100%",
-    }}>
-      {label}
-    </button>
-  );
-}
-
 function SettingsRow({ label, sub, children }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0", borderBottom: `1px solid ${T.borderFaint}` }}>
@@ -571,13 +558,15 @@ function OrdersPage({ calls }) {
   };
 
   const toggleStatus = async (call) => {
-    const next = getOrderStatus(call) === "new" ? "completed" : "new";
+    const next = "completed";
+    console.log("Patching call id:", call.id);
     try {
       const res = await fetch(`${API_BASE}/calls/${call.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: next }),
       });
+      console.log("PATCH response:", res.status);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setOrderStatuses(prev => ({ ...prev, [call.id]: next }));
     } catch (err) {
@@ -674,10 +663,7 @@ function OrdersPage({ calls }) {
                 </div>
 
                 {/* Toggle button */}
-                {isNew
-                  ? <OrangeBtn label="Mark as completed" onClick={() => toggleStatus(call)} />
-                  : <GhostBtn  label="Mark as new"       onClick={() => toggleStatus(call)} />
-                }
+                {isNew && <OrangeBtn label="Mark as completed" onClick={() => toggleStatus(call)} />}
               </div>
             );
           })}
