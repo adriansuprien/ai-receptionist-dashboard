@@ -612,7 +612,7 @@ function OrdersPage({ calls, refreshCalls }) {
 
             const EMPTY_VALUES = ["not provided", "none mentioned", "not specified"];
             const normalize = (val) => {
-              const cleaned = val ? val.replace(/^[\*\-\s]+|[\*\-\s]+$/g, "").trim() : "";
+              const cleaned = val ? val.replace(/^[*\-\s]+|[*\-\s]+$/g, "").trim() : "";
               return (!cleaned || EMPTY_VALUES.includes(cleaned.toLowerCase())) ? "—" : cleaned;
             };
 
