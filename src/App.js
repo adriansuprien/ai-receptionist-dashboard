@@ -793,16 +793,22 @@ export default function App() {
       .catch(err => console.error("[API] All retries failed for /calls:", err));
   };
 
-  useEffect(() => {
+  const refreshData = () => {
     refreshCalls();
-
     fetchWithRetry(`${API_BASE}/analytics`)
       .then(data => setAnalytics(data))
       .catch(err => console.error("[API] All retries failed for /analytics:", err));
+  };
+
+  useEffect(() => {
+    refreshData();
 
     fetchWithRetry(`${API_BASE}/settings`)
       .then(data => setSettings(prev => ({ ...prev, ...data })))
       .catch(err => console.error("[API] All retries failed for /settings:", err));
+
+    const interval = setInterval(refreshData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
