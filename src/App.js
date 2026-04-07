@@ -722,19 +722,25 @@ function OrdersPage({ calls }) {
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
 function SettingsPage() {
-  const [form, setForm] = useState({
+  const defaults = {
     businessName: "", greeting: "", forwardNumber: "",
     openTime: "09:00", closeTime: "17:00",
     takeOrders: true, bookAppointments: false,
-  });
-  const [saved, setSaved] = useState(false);
+  };
+  const [form,      setForm]      = useState(defaults);
+  const [savedForm, setSavedForm] = useState(defaults);
+  const [dirty,     setDirty]     = useState(false);
+  const [saved,     setSaved]     = useState(false);
 
   useEffect(() => {
     (async () => {
       try {
         const res = await fetch(`${API_BASE}/settings`);
         const data = await res.json();
-        setForm(prev => ({ ...prev, ...data }));
+        const merged = { ...defaults, ...data };
+        setForm(merged);
+        setSavedForm(merged);
+        setDirty(false);
       } catch (err) {
         console.error("[API] Failed to load settings:", err);
       }
@@ -743,7 +749,12 @@ function SettingsPage() {
 
   const set = (key, val) => {
     setForm(prev => ({ ...prev, [key]: val }));
-    setSaved(false);
+    setDirty(true);
+  };
+
+  const cancel = () => {
+    setForm(savedForm);
+    setDirty(false);
   };
 
   const save = async () => {
@@ -754,6 +765,8 @@ function SettingsPage() {
         body: JSON.stringify(form),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setSavedForm(form);
+      setDirty(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
@@ -762,7 +775,7 @@ function SettingsPage() {
   };
 
   return (
-    <div>
+    <div style={{ paddingBottom: dirty ? 80 : 0 }}>
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text, letterSpacing: "-0.02em" }}>Settings</h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textMuted }}>Customize how your AI receptionist behaves</p>
@@ -802,14 +815,29 @@ function SettingsPage() {
         </SettingsRow>
       </Card>
 
-      <button onClick={save} style={{
-        padding: "10px 24px", borderRadius: 8, border: "none", cursor: "pointer",
-        fontSize: 13, fontWeight: 600,
-        background: saved ? "#0F9E6A" : T.orange,
-        color: "#fff", transition: "background 0.2s",
-      }}>
-        {saved ? "Saved!" : "Save settings"}
-      </button>
+      {dirty && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 216, right: 0,
+          background: T.surface, borderTop: `1px solid ${T.border}`,
+          padding: "14px 40px", display: "flex", gap: 10, alignItems: "center",
+          boxShadow: "0 -4px 16px rgba(44,24,16,0.08)", zIndex: 100,
+        }}>
+          <button onClick={cancel} style={{
+            padding: "9px 20px", borderRadius: 8, border: `1px solid ${T.border}`,
+            background: "transparent", color: T.textSub, cursor: "pointer", fontSize: 13, fontWeight: 500,
+          }}>
+            Cancel
+          </button>
+          <button onClick={save} style={{
+            padding: "9px 20px", borderRadius: 8, border: "none", cursor: "pointer",
+            fontSize: 13, fontWeight: 600,
+            background: saved ? "#0F9E6A" : T.orange,
+            color: "#fff", transition: "background 0.2s",
+          }}>
+            {saved ? "Saved!" : "Save changes"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
