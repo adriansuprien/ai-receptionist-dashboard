@@ -76,6 +76,8 @@ function isOrderCall(call) {
     "no items were ordered", "no items ordered",
     "no order completed", "no order was completed",
     "no food", "no purchase",
+    "but no order", "call purpose", "beginning of a call",
+    "beginning of the conversation", "answered the incoming call",
   ];
   if (noOrderPhrases.some(p => summary.includes(p))) return false;
 
@@ -103,14 +105,6 @@ function inferOutcome(call) {
 
 const cleanText = (text) =>
   text ? text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/#/g, "") : "";
-
-const splitOrderItems = (text) => {
-  if (!text) return [];
-  return cleanText(text)
-    .split(/\n| - /)
-    .map(s => s.trim())
-    .filter(Boolean);
-};
 
 // ─── SHARED UI ───────────────────────────────────────────────────────────────
 function Pill({ status }) {
@@ -619,7 +613,19 @@ function OrdersPage({ calls }) {
           {orders.map(call => {
             const status = getOrderStatus(call);
             const isNew  = status === "new";
-            const items  = splitOrderItems(call.order_summary);
+            const raw    = cleanText(call.order_summary || "");
+
+            const extractField = (patterns) => {
+              for (const re of patterns) {
+                const m = raw.match(re);
+                if (m && m[1] && m[1].trim()) return m[1].trim();
+              }
+              return null;
+            };
+
+            const item   = extractField([/Items?:\s*(.+)/i, /Item ordered:\s*(.+)/i]);
+            const pickup = extractField([/Pickup Time:\s*(.+)/i, /Requested Pickup.*?:\s*(.+)/i]);
+            const issue  = extractField([/Status:\s*(.+)/i]);
 
             return (
               <div key={call.id} style={{
@@ -634,7 +640,6 @@ function OrdersPage({ calls }) {
                     <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>Order #{call.id}</p>
                     <p style={{ margin: "3px 0 0", fontSize: 12, color: T.textMuted }}>{fmtTime(call.created_at)}</p>
                   </div>
-                  {/* Badge */}
                   <span style={{
                     display: "inline-flex", alignItems: "center", gap: 5,
                     fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
@@ -646,11 +651,17 @@ function OrdersPage({ calls }) {
                   </span>
                 </div>
 
-                {/* Items */}
-                <div style={{ background: T.surfaceWarm, borderRadius: 8, padding: "12px 14px", border: `1px solid ${T.borderFaint}` }}>
-                  <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.07em", textTransform: "uppercase" }}>Items</p>
-                  {items.map((item, i) => (
-                    <p key={i} style={{ margin: "0 0 4px", fontSize: 13, color: T.text, lineHeight: 1.5 }}>{item}</p>
+                {/* Parsed fields */}
+                <div style={{ background: T.surfaceWarm, borderRadius: 8, padding: "12px 14px", border: `1px solid ${T.borderFaint}`, display: "flex", flexDirection: "column", gap: 8 }}>
+                  {[
+                    { label: "Item",   value: item   || "See transcript" },
+                    { label: "Pickup", value: pickup || "Not specified"  },
+                    ...(issue ? [{ label: "Issue", value: issue }] : []),
+                  ].map(({ label, value }) => (
+                    <div key={label} style={{ display: "flex", gap: 8 }}>
+                      <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.05em", textTransform: "uppercase", width: 48, flexShrink: 0, paddingTop: 1 }}>{label}</span>
+                      <span style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{value}</span>
+                    </div>
                   ))}
                 </div>
 
