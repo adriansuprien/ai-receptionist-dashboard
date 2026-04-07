@@ -820,6 +820,7 @@ export default function App() {
   const [calls,     setCalls]     = useState([]);
   const [analytics, setAnalytics] = useState({});
   const [page,      setPage]      = useState("Dashboard");
+  const [settings,  setSettings]  = useState({ restaurantName: "AI Receptionist", phoneNumber: "" });
 
   useEffect(() => {
     fetchWithRetry(`${API_BASE}/calls`)
@@ -829,6 +830,10 @@ export default function App() {
     fetchWithRetry(`${API_BASE}/analytics`)
       .then(data => setAnalytics(data))
       .catch(err => console.error("[API] All retries failed for /analytics:", err));
+
+    fetchWithRetry(`${API_BASE}/settings`)
+      .then(data => setSettings(prev => ({ ...prev, ...data })))
+      .catch(err => console.error("[API] All retries failed for /settings:", err));
   }, []);
 
   return (
@@ -839,7 +844,7 @@ export default function App() {
           <div style={{ width: 28, height: 28, borderRadius: 7, background: T.orange, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1a5.5 5.5 0 0 0-5.5 5.5c0 1.8.87 3.4 2.2 4.4L4 14l3-1.5a5.5 5.5 0 1 0 1-11.5z" fill="white" opacity="0.95"/></svg>
           </div>
-          <span style={{ fontWeight: 700, fontSize: 14, color: T.text, letterSpacing: "-0.01em" }}>AI Receptionist</span>
+          <span style={{ fontWeight: 700, fontSize: 14, color: T.text, letterSpacing: "-0.01em" }}>{settings.restaurantName}</span>
         </div>
 
         {NAV.map(({ id, icon }) => {
