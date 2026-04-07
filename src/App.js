@@ -196,17 +196,6 @@ function GhostBtn({ label, onClick }) {
   );
 }
 
-function Toggle({ checked, onChange }) {
-  return (
-    <div
-      onClick={() => onChange(!checked)}
-      style={{ width: 38, height: 22, borderRadius: 999, background: checked ? T.orange : T.border, cursor: "pointer", position: "relative", transition: "background 0.2s", flexShrink: 0 }}
-    >
-      <div style={{ position: "absolute", top: 3, left: checked ? 19 : 3, width: 16, height: 16, borderRadius: "50%", background: "#fff", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.15)" }} />
-    </div>
-  );
-}
-
 function SettingsRow({ label, sub, children }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 0", borderBottom: `1px solid ${T.borderFaint}` }}>
@@ -722,9 +711,7 @@ function OrdersPage({ calls }) {
 
 // ─── SETTINGS ────────────────────────────────────────────────────────────────
 const SETTINGS_DEFAULTS = {
-  businessName: "", greeting: "", forwardNumber: "",
-  openTime: "09:00", closeTime: "17:00",
-  takeOrders: true, bookAppointments: false,
+  restaurantName: "", phoneNumber: "",
 };
 
 function SettingsPage() {
@@ -782,37 +769,13 @@ function SettingsPage() {
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textMuted }}>Customize how your AI receptionist behaves</p>
       </div>
 
-      <Card style={{ marginBottom: 12 }}>
+      <Card style={{ marginBottom: 28 }}>
         <h2 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: T.text }}>Business info</h2>
-        <SettingsRow label="Business name" sub="Shown in AI greetings">
-          <TInput value={form.businessName} onChange={v => set("businessName", v)} placeholder="e.g. RimReaper Detailing" />
-        </SettingsRow>
-        <SettingsRow label="Greeting message" sub="What the AI says on pickup">
-          <TInput value={form.greeting} onChange={v => set("greeting", v)} placeholder="e.g. Thanks for calling..." />
+        <SettingsRow label="Restaurant name" sub="Shown in AI greetings">
+          <TInput value={form.restaurantName} onChange={v => set("restaurantName", v)} placeholder="e.g. RimReaper Detailing" />
         </SettingsRow>
         <SettingsRow label="Forwarding number" sub="Handoff number for human agents">
-          <TInput value={form.forwardNumber} onChange={v => set("forwardNumber", v)} placeholder="+1 (555) 000-0000" />
-        </SettingsRow>
-      </Card>
-
-      <Card style={{ marginBottom: 12 }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: T.text }}>Hours</h2>
-        <SettingsRow label="AI active hours" sub="AI only answers calls during this window">
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <TInput value={form.openTime}  onChange={v => set("openTime", v)}  type="time" />
-            <span style={{ fontSize: 13, color: T.textMuted }}>to</span>
-            <TInput value={form.closeTime} onChange={v => set("closeTime", v)} type="time" />
-          </div>
-        </SettingsRow>
-      </Card>
-
-      <Card style={{ marginBottom: 28 }}>
-        <h2 style={{ margin: "0 0 4px", fontSize: 14, fontWeight: 700, color: T.text }}>Call behavior</h2>
-        <SettingsRow label="Take orders" sub="AI can accept and log orders from callers">
-          <Toggle checked={form.takeOrders} onChange={v => set("takeOrders", v)} />
-        </SettingsRow>
-        <SettingsRow label="Book appointments" sub="AI can schedule appointments">
-          <Toggle checked={form.bookAppointments} onChange={v => set("bookAppointments", v)} />
+          <TInput value={form.phoneNumber} onChange={v => set("phoneNumber", v)} placeholder="+1 (555) 000-0000" />
         </SettingsRow>
       </Card>
 
