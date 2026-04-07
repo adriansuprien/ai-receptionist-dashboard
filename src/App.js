@@ -370,10 +370,7 @@ function DashboardPage({ calls, analytics }) {
   const total     = analytics.total_calls   ?? calls.length;
   const minutes   = analytics.total_minutes ?? 0;
   const today     = calls.filter(c => c.created_at && new Date(c.created_at).toDateString() === new Date().toDateString()).length;
-  const completed = calls.filter(c => getStatus(c) === "completed").length;
   const missed    = calls.filter(c => ["missed","failed"].includes(getStatus(c))).length;
-  const convRate  = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const avgDur    = total > 0 ? Math.round(minutes / total) : 0;
   const recent    = [...calls].slice(0, 5);
 
   return (
@@ -390,11 +387,6 @@ function DashboardPage({ calls, analytics }) {
         <StatCard label="Total minutes" value={minutes}        />
         <StatCard label="Calls today"   value={today}          />
         <StatCard label="Missed calls"  value={missed}         />
-      </div>
-      <div style={{ display: "flex", gap: 12, marginBottom: 32, flexWrap: "wrap" }}>
-        <StatCard label="Conversion rate" value={`${convRate}%`}  sub="calls to orders" />
-        <StatCard label="Avg duration"    value={`${avgDur} min`} />
-        <div style={{ flex: 1 }} /><div style={{ flex: 1 }} />
       </div>
 
       <Card>
@@ -531,15 +523,6 @@ function AnalyticsPage({ calls, analytics }) {
   const peakHour  = hourCounts.indexOf(Math.max(...hourCounts));
   const peakLabel = peakHour === 0 ? "12 AM" : peakHour < 12 ? `${peakHour} AM` : peakHour === 12 ? "12 PM" : `${peakHour - 12} PM`;
 
-  const intentMap = calls.reduce((acc, c) => {
-    const t = (c.transcript || "").toLowerCase();
-    const key = t.includes("order") ? "order" : (t.includes("book") || t.includes("appoint")) ? "booking" : (t.includes("?") || t.includes("question")) ? "inquiry" : "other";
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  const intents   = Object.entries(intentMap).sort((a, b) => b[1] - a[1]);
-  const maxIntent = intents[0]?.[1] || 1;
-
   const Bar = ({ value, max, color }) => (
     <div style={{ height: 6, borderRadius: 999, background: T.borderFaint, overflow: "hidden" }}>
       <div style={{ height: "100%", borderRadius: 999, background: color, width: max > 0 ? `${Math.round((value / max) * 100)}%` : "0%" }} />
@@ -578,20 +561,6 @@ function AnalyticsPage({ calls, analytics }) {
           ))}
         </Card>
 
-        <Card style={{ flex: 1, minWidth: 220 }}>
-          <h2 style={{ margin: "0 0 20px", fontSize: 15, fontWeight: 700, color: T.text }}>Top customer intents</h2>
-          {intents.length === 0 ? (
-            <p style={{ fontSize: 13, color: T.textMuted }}>Not enough data yet</p>
-          ) : intents.map(([intent, count]) => (
-            <div key={intent} style={{ marginBottom: 18 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                <span style={{ fontSize: 13, color: T.text, textTransform: "capitalize" }}>{intent}</span>
-                <span style={{ fontSize: 13, fontWeight: 700, color: T.text }}>{count}</span>
-              </div>
-              <Bar value={count} max={maxIntent} color={T.orange} />
-            </div>
-          ))}
-        </Card>
       </div>
     </div>
   );
