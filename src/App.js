@@ -275,19 +275,6 @@ function CallDetailModal({ call, onClose }) {
           </div>
         </div>
 
-        {/* AI Insights */}
-        <div style={{ padding: "20px 24px", borderBottom: `1px solid ${T.borderFaint}` }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>AI Insights</p>
-            <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: T.orange10, color: T.orange, fontWeight: 600 }}>Coming soon</span>
-          </div>
-          <div style={{ background: T.surfaceWarm, borderRadius: 10, padding: "14px 16px", border: `1px dashed ${T.border}` }}>
-            <p style={{ margin: 0, fontSize: 13, color: T.textMuted, fontStyle: "italic" }}>
-              Auto-generated insights will appear here once full transcripts are available.
-            </p>
-          </div>
-        </div>
-
         {/* Actions */}
         <div style={{ padding: "20px 24px" }}>
           <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.06em", textTransform: "uppercase" }}>Actions</p>
@@ -327,10 +314,9 @@ function CallDetailModal({ call, onClose }) {
 
 // ─── DASHBOARD ───────────────────────────────────────────────────────────────
 function DashboardPage({ calls, analytics }) {
-  const total     = analytics.total_calls   ?? calls.length;
   const minutes   = analytics.total_minutes ?? 0;
   const today     = calls.filter(c => c.created_at && new Date(c.created_at).toDateString() === new Date().toDateString()).length;
-  const missed    = calls.filter(c => ["missed","failed"].includes(getStatus(c))).length;
+  const ordersToday = calls.filter(c => c.order_status === "new" && c.created_at && new Date(c.created_at).toDateString() === new Date().toDateString()).length;
   const recent    = [...calls].slice(0, 5);
 
   return (
@@ -343,10 +329,9 @@ function DashboardPage({ calls, analytics }) {
       </div>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
-        <StatCard label="Total calls"   value={total}          />
         <StatCard label="Total minutes" value={minutes}        />
         <StatCard label="Calls today"   value={today}          />
-        <StatCard label="Missed calls"  value={missed}         />
+        <StatCard label="Orders today"  value={ordersToday}    />
       </div>
 
       <Card>
@@ -474,7 +459,6 @@ function AnalyticsPage({ calls, analytics }) {
   const completed = calls.filter(c => getStatus(c) === "completed").length;
   const missed    = calls.filter(c => ["missed","failed"].includes(getStatus(c))).length;
   const pending   = calls.filter(c => getStatus(c) === "pending").length;
-  const answered  = total > 0 ? Math.round((completed / total) * 100) : 0;
   const avgDur    = total > 0 ? Math.round(minutes / total) : 0;
 
   const hourCounts = Array(24).fill(0);
@@ -496,10 +480,8 @@ function AnalyticsPage({ calls, analytics }) {
       </div>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
-        <StatCard label="Answered rate"  value={`${answered}%`}              sub={`${completed} of ${total} calls`} />
         <StatCard label="Avg duration"   value={`${avgDur} min`}             sub="per call" />
         <StatCard label="Peak call time" value={total > 0 ? peakLabel : "—"} sub="busiest hour" />
-        <StatCard label="Missed calls"   value={missed}                      sub={`${pending} pending`} />
       </div>
 
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -528,8 +510,10 @@ function AnalyticsPage({ calls, analytics }) {
 // ─── ORDERS ──────────────────────────────────────────────────────────────────
 function OrdersPage({ calls, refreshCalls }) {
   const [orderStatuses, setOrderStatuses] = useState({});
+  const [showCompleted, setShowCompleted] = useState(false);
 
-  const orders = calls.filter(c => c.order_status === "new");
+  const activeOrders    = calls.filter(c => c.order_status === "new");
+  const completedOrders = calls.filter(c => c.order_status === "completed");
 
   const getOrderStatus = (call) => {
     if (orderStatuses[call.id] !== undefined) return orderStatuses[call.id];
@@ -564,94 +548,113 @@ function OrdersPage({ calls, refreshCalls }) {
       " · " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   };
 
+  const renderCard = (call, showButton) => {
+    const status = getOrderStatus(call);
+    const isNew  = status === "new";
+    const raw    = call.order_summary || "";
+
+    const extractField = (patterns) => {
+      for (const re of patterns) {
+        const m = raw.match(re);
+        if (m && m[1] && m[1].trim()) return m[1].trim();
+      }
+      return null;
+    };
+
+    const EMPTY_VALUES = ["not provided", "none mentioned", "not specified"];
+    const normalize = (val) => {
+      const cleaned = val ? val.replace(/\*\*/g, "").replace(/^[*\-\s]+|[*\-\s]+$/g, "").trim() : "";
+      return (!cleaned || EMPTY_VALUES.includes(cleaned.toLowerCase())) ? "—" : cleaned;
+    };
+
+    const rawItem   = extractField([/Items Ordered:\*\*\s*(.+?)(?:\n|$)/i, /Items?:\*\*\s*(.+?)(?:\n|$)/i, /Items?:\s*(.+?)(?:\n|$)/i]);
+    const rawPickup = extractField([/Pickup Time:\*\*\s*(.+?)(?:\n|$)/i, /Pickup Time:\s*(.+?)(?:\n|$)/i]);
+    const rawName   = extractField([/Customer Name:\*\*\s*(.+?)(?:\n|$)/i, /Customer Name:\s*(.+?)(?:\n|$)/i]);
+    const rawPhone  = extractField([/Phone Number:\*\*\s*(.+?)(?:\n|$)/i, /Phone Number:\s*(.+?)(?:\n|$)/i]);
+
+    const itemVal   = normalize(rawItem);
+    const pickupVal = normalize(rawPickup);
+    const nameVal   = normalize(rawName)   !== "—" ? normalize(rawName)   : cleanName(call.customer_name);
+    const phoneVal  = normalize(rawPhone)  !== "—" ? normalize(rawPhone)  : (call.phone_number  || "—");
+
+    return (
+      <div key={call.id} style={{
+        background: T.surface, border: `1px solid ${T.border}`,
+        borderRadius: 12, padding: "20px",
+        display: "flex", flexDirection: "column", gap: 16,
+        boxShadow: "0 1px 4px rgba(44,24,16,0.05)",
+      }}>
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+          <div>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>Order #{call.id}</p>
+            <p style={{ margin: "3px 0 0", fontSize: 12, color: T.textMuted }}>{fmtTime(call.created_at)}</p>
+          </div>
+          <span style={{
+            display: "inline-flex", alignItems: "center", gap: 5,
+            fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
+            background: isNew ? T.orange10 : T.surfaceWarm,
+            color:      isNew ? T.orange   : T.textMuted,
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: isNew ? T.orange : T.textMuted }} />
+            {isNew ? "New" : "Completed"}
+          </span>
+        </div>
+
+        {/* Parsed fields */}
+        <div style={{ background: T.surfaceWarm, borderRadius: 8, padding: "12px 14px", border: `1px solid ${T.borderFaint}`, display: "flex", flexDirection: "column", gap: 8 }}>
+          {[
+            { label: "Name",   value: nameVal   },
+            { label: "Phone",  value: phoneVal  },
+            { label: "Item",   value: itemVal   },
+            { label: "Pickup", value: pickupVal },
+          ].map(({ label, value }) => (
+            <div key={label} style={{ display: "flex", gap: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.05em", textTransform: "uppercase", width: 48, flexShrink: 0, paddingTop: 1 }}>{label}</span>
+              <span style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{value}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Toggle button */}
+        {showButton && <OrangeBtn label="Mark as completed" onClick={() => toggleStatus(call)} />}
+      </div>
+    );
+  };
+
   return (
     <div>
       <div style={{ marginBottom: 32 }}>
         <h1 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: T.text, letterSpacing: "-0.02em" }}>Orders</h1>
         <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textMuted }}>
-          {orders.length} order{orders.length !== 1 ? "s" : ""} received
+          {activeOrders.length} active order{activeOrders.length !== 1 ? "s" : ""}
         </p>
       </div>
 
-      {orders.length === 0 ? (
-        <Card>
-          <p style={{ textAlign: "center", color: T.textMuted, fontSize: 13, padding: "32px 0" }}>No orders yet</p>
+      {activeOrders.length === 0 ? (
+        <Card style={{ marginBottom: 20 }}>
+          <p style={{ textAlign: "center", color: T.textMuted, fontSize: 13, padding: "32px 0" }}>No active orders</p>
         </Card>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
-          {orders.map(call => {
-            const status = getOrderStatus(call);
-            const isNew  = status === "new";
-            const raw    = call.order_summary || "";
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14, marginBottom: 32 }}>
+          {activeOrders.map(call => renderCard(call, true))}
+        </div>
+      )}
 
-            const extractField = (patterns) => {
-              for (const re of patterns) {
-                const m = raw.match(re);
-                if (m && m[1] && m[1].trim()) return m[1].trim();
-              }
-              return null;
-            };
-
-            const EMPTY_VALUES = ["not provided", "none mentioned", "not specified"];
-            const normalize = (val) => {
-              const cleaned = val ? val.replace(/\*\*/g, "").replace(/^[*\-\s]+|[*\-\s]+$/g, "").trim() : "";
-              return (!cleaned || EMPTY_VALUES.includes(cleaned.toLowerCase())) ? "—" : cleaned;
-            };
-
-            const rawItem   = extractField([/Items Ordered:\*\*\s*(.+?)(?:\n|$)/i, /Items?:\*\*\s*(.+?)(?:\n|$)/i, /Items?:\s*(.+?)(?:\n|$)/i]);
-            const rawPickup = extractField([/Pickup Time:\*\*\s*(.+?)(?:\n|$)/i, /Pickup Time:\s*(.+?)(?:\n|$)/i]);
-            const rawName   = extractField([/Customer Name:\*\*\s*(.+?)(?:\n|$)/i, /Customer Name:\s*(.+?)(?:\n|$)/i]);
-            const rawPhone  = extractField([/Phone Number:\*\*\s*(.+?)(?:\n|$)/i, /Phone Number:\s*(.+?)(?:\n|$)/i]);
-
-            const itemVal   = normalize(rawItem);
-            const pickupVal = normalize(rawPickup);
-            const nameVal   = normalize(rawName)   !== "—" ? normalize(rawName)   : cleanName(call.customer_name);
-            const phoneVal  = normalize(rawPhone)  !== "—" ? normalize(rawPhone)  : (call.phone_number  || "—");
-
-            return (
-              <div key={call.id} style={{
-                background: T.surface, border: `1px solid ${T.border}`,
-                borderRadius: 12, padding: "20px",
-                display: "flex", flexDirection: "column", gap: 16,
-                boxShadow: "0 1px 4px rgba(44,24,16,0.05)",
-              }}>
-                {/* Header */}
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                  <div>
-                    <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>Order #{call.id}</p>
-                    <p style={{ margin: "3px 0 0", fontSize: 12, color: T.textMuted }}>{fmtTime(call.created_at)}</p>
-                  </div>
-                  <span style={{
-                    display: "inline-flex", alignItems: "center", gap: 5,
-                    fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999,
-                    background: isNew ? T.orange10 : T.surfaceWarm,
-                    color:      isNew ? T.orange   : T.textMuted,
-                  }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: isNew ? T.orange : T.textMuted }} />
-                    {isNew ? "New" : "Completed"}
-                  </span>
-                </div>
-
-                {/* Parsed fields */}
-                <div style={{ background: T.surfaceWarm, borderRadius: 8, padding: "12px 14px", border: `1px solid ${T.borderFaint}`, display: "flex", flexDirection: "column", gap: 8 }}>
-                  {[
-                    { label: "Name",   value: nameVal   },
-                    { label: "Phone",  value: phoneVal  },
-                    { label: "Item",   value: itemVal   },
-                    { label: "Pickup", value: pickupVal },
-                  ].map(({ label, value }) => (
-                    <div key={label} style={{ display: "flex", gap: 8 }}>
-                      <span style={{ fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.05em", textTransform: "uppercase", width: 48, flexShrink: 0, paddingTop: 1 }}>{label}</span>
-                      <span style={{ fontSize: 13, color: T.text, lineHeight: 1.5 }}>{value}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Toggle button */}
-                {isNew && <OrangeBtn label="Mark as completed" onClick={() => toggleStatus(call)} />}
-              </div>
-            );
-          })}
+      {completedOrders.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowCompleted(p => !p)}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: "0 0 16px", fontSize: 13, fontWeight: 600, color: T.textSub }}
+          >
+            <span style={{ fontSize: 16, lineHeight: 1 }}>{showCompleted ? "▾" : "▸"}</span>
+            Completed orders ({completedOrders.length})
+          </button>
+          {showCompleted && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
+              {completedOrders.map(call => renderCard(call, false))}
+            </div>
+          )}
         </div>
       )}
     </div>
