@@ -685,7 +685,7 @@ function SettingsPage() {
         const res = await fetch(`${API_BASE}/settings`);
         const data = await res.json();
         console.log("Settings loaded:", data);
-        const merged = { ...SETTINGS_DEFAULTS, ...data };
+        const merged = { restaurantName: data.restaurantName || '', phoneNumber: data.phoneNumber || '' };
         setForm(merged);
         setSavedForm(merged);
         setDirty(false);
