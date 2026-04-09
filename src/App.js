@@ -48,8 +48,6 @@ const T = {
 const STATUS_STYLE = {
   completed: { dot: "#0F9E6A", bg: T.teal50,  text: T.teal700  },
   pending:   { dot: "#D97706", bg: T.amber50, text: T.amber700 },
-  missed:    { dot: "#DC2626", bg: T.red50,   text: T.red700   },
-  failed:    { dot: "#DC2626", bg: T.red50,   text: T.red700   },
 };
 
 const OUTCOME_STYLE = {
@@ -398,7 +396,7 @@ function CallsPage({ calls }) {
             onChange={e => setSearch(e.target.value)}
             style={{ fontSize: 13, padding: "8px 12px", borderRadius: 8, border: `1px solid ${T.border}`, outline: "none", color: T.text, flex: 1, minWidth: 180, background: T.surface }}
           />
-          {["all","completed","pending","missed"].map(f => (
+          {["all","completed","pending"].map(f => (
             <button key={f} onClick={() => setFilter(f)} style={{
               fontSize: 12, padding: "7px 14px", borderRadius: 999, border: "none", cursor: "pointer", fontWeight: 600,
               background: filter === f ? T.orange   : T.surfaceWarm,
@@ -457,7 +455,6 @@ function AnalyticsPage({ calls, analytics }) {
   const total     = analytics.total_calls   ?? calls.length;
   const minutes   = analytics.total_minutes ?? 0;
   const completed = calls.filter(c => getStatus(c) === "completed").length;
-  const missed    = calls.filter(c => ["missed","failed"].includes(getStatus(c))).length;
   const pending   = calls.filter(c => getStatus(c) === "pending").length;
   const avgDur    = total > 0 ? Math.round(minutes / total) : 0;
 
@@ -490,7 +487,6 @@ function AnalyticsPage({ calls, analytics }) {
           {[
             { label: "Completed", value: completed, color: "#0F9E6A" },
             { label: "Pending",   value: pending,   color: "#D97706" },
-            { label: "Missed",    value: missed,    color: "#DC2626" },
           ].map(item => (
             <div key={item.label} style={{ marginBottom: 18 }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
