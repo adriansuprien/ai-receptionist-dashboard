@@ -811,9 +811,7 @@ export default function App() {
       {/* Sidebar */}
       <div style={{ width: 216, background: T.bg, borderRight: `1px solid ${T.border}`, padding: "24px 12px", display: "flex", flexDirection: "column", gap: 1, flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 28, paddingLeft: 8 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: T.orange, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 1a5.5 5.5 0 0 0-5.5 5.5c0 1.8.87 3.4 2.2 4.4L4 14l3-1.5a5.5 5.5 0 1 0 1-11.5z" fill="white" opacity="0.95"/></svg>
-          </div>
+          <img src='/logo.jpg' alt='Punjab Halal' style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover' }} />
           <span style={{ fontWeight: 700, fontSize: 14, color: T.text, letterSpacing: "-0.01em" }}>{settings.restaurantName}</span>
         </div>
 
