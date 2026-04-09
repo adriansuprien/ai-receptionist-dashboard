@@ -69,6 +69,13 @@ function isOrderCall(call) {
   return call.order_status === "new";
 }
 
+function cleanName(name) {
+  if (!name) return "—";
+  const cleaned = name.replace(/\*\*/g, "").replace(/\*/g, "").trim();
+  if (!cleaned || ["not provided", "unknown", "n/a"].includes(cleaned.toLowerCase())) return "—";
+  return cleaned;
+}
+
 function inferOutcome(call) {
   if (call.outcome) return call.outcome.toLowerCase();
   if (isOrderCall(call)) return "order placed";
@@ -211,7 +218,7 @@ function CallDetailModal({ call, onClose }) {
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <Avatar name={call.customer_name} size={44} />
               <div>
-                <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: T.text }}>{call.customer_name || "Unknown"}</p>
+                <p style={{ margin: 0, fontSize: 17, fontWeight: 700, color: T.text }}>{cleanName(call.customer_name)}</p>
                 <p style={{ margin: "2px 0 0", fontSize: 13, color: T.textSub }}>{call.phone_number || "No phone"}</p>
               </div>
             </div>
@@ -364,7 +371,7 @@ function DashboardPage({ calls, analytics }) {
                 <td style={{ padding: "13px 0" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <Avatar name={call.customer_name} />
-                    <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{call.customer_name || "Unknown"}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{cleanName(call.customer_name)}</span>
                   </div>
                 </td>
                 <td style={{ padding: "13px 0", fontSize: 13, color: T.textSub }}>{call.phone_number || "—"}</td>
@@ -442,7 +449,7 @@ function CallsPage({ calls }) {
                 <td style={{ padding: "13px 0" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <Avatar name={call.customer_name} />
-                    <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{call.customer_name || "Unknown"}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{cleanName(call.customer_name)}</span>
                   </div>
                 </td>
                 <td style={{ padding: "13px 0", fontSize: 13, color: T.textSub }}>{call.phone_number || "—"}</td>
@@ -598,7 +605,7 @@ function OrdersPage({ calls, refreshCalls }) {
 
             const itemVal   = normalize(rawItem);
             const pickupVal = normalize(rawPickup);
-            const nameVal   = normalize(rawName)   !== "—" ? normalize(rawName)   : (call.customer_name || "—");
+            const nameVal   = normalize(rawName)   !== "—" ? normalize(rawName)   : cleanName(call.customer_name);
             const phoneVal  = normalize(rawPhone)  !== "—" ? normalize(rawPhone)  : (call.phone_number  || "—");
 
             return (
