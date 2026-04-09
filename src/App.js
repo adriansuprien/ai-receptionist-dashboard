@@ -66,32 +66,7 @@ function getStatus(call) {
 }
 
 function isOrderCall(call) {
-  const summary = (call.order_summary || call.transcript || "").toLowerCase();
-  const status  = (call.order_status || "").toLowerCase();
-
-  const noOrderPhrases = [
-    "no order", "no order placed", "no order was placed",
-    "did not place", "didn't place", "only shows the greeting",
-    "only the greeting", "conversation only shows",
-    "no items were ordered", "no items ordered",
-    "no order completed", "no order was completed",
-    "no food", "no purchase",
-    "but no order", "call purpose", "beginning of a call",
-    "beginning of the conversation", "answered the incoming call",
-  ];
-  if (noOrderPhrases.some(p => summary.includes(p))) return false;
-
-  if (["inquiry", "missed", "failed", "cancelled"].includes(status)) return false;
-
-  const foodWords = ["chicken", "lamb", "beef", "rice", "gyro", "platter",
-    "combo", "falafel", "shawarma", "burger", "wrap", "kebab", "naan", "biryani"];
-  const confirmWords = ["confirmed", "placed", "will be ready", "pickup at",
-    "ordered", "got it", "sounds good", "all set", "we'll have", "see you at"];
-
-  const hasFood    = foodWords.some(w => summary.includes(w));
-  const hasConfirm = confirmWords.some(w => summary.includes(w));
-
-  return hasFood && hasConfirm;
+  return call.order_status === "new";
 }
 
 function inferOutcome(call) {
