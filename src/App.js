@@ -336,12 +336,12 @@ function DashboardPage({ calls, analytics }) {
         <h2 style={{ margin: "0 0 20px", fontSize: 15, fontWeight: 700, color: T.text }}>Recent calls</h2>
         <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
           <colgroup>
-            <col style={{ width: "25%" }} /><col style={{ width: "22%" }} />
-            <col style={{ width: "53%" }} />
+            <col style={{ width: "40%" }} /><col style={{ width: "40%" }} />
+            <col style={{ width: "20%" }} />
           </colgroup>
           <thead>
             <tr style={{ borderBottom: `1px solid ${T.borderFaint}` }}>
-              {["Name","Phone","Transcript"].map(h => (
+              {["Name","Phone","Outcome"].map(h => (
                 <th key={h} style={{ padding: "0 0 12px", textAlign: "left", fontSize: 11, fontWeight: 600, color: T.textMuted, letterSpacing: "0.07em", textTransform: "uppercase" }}>{h}</th>
               ))}
             </tr>
@@ -349,18 +349,29 @@ function DashboardPage({ calls, analytics }) {
           <tbody>
             {recent.length === 0 ? (
               <tr><td colSpan={3} style={{ padding: "32px 0", textAlign: "center", fontSize: 13, color: T.textMuted }}>No calls yet</td></tr>
-            ) : recent.map((call, i) => (
-              <tr key={i} style={{ borderBottom: i < recent.length - 1 ? `1px solid ${T.borderFaint}` : "none" }}>
-                <td style={{ padding: "13px 0" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <Avatar name={call.customer_name} />
-                    <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{cleanName(call.customer_name)}</span>
-                  </div>
-                </td>
-                <td style={{ padding: "13px 0", fontSize: 13, color: T.textSub }}>{call.phone_number || "—"}</td>
-                <td style={{ padding: "13px 12px 13px 0", fontSize: 13, color: T.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 0 }}>{call.transcript || "—"}</td>
-              </tr>
-            ))}
+            ) : recent.map((call, i) => {
+              const outcomePill = call.order_status === "new"
+                ? { label: "Order",     bg: T.teal50,   color: T.teal700   }
+                : call.order_status === "completed"
+                ? { label: "Completed", bg: T.surfaceWarm, color: T.textSub }
+                : { label: "Inquiry",   bg: T.amber50,  color: T.amber700  };
+              return (
+                <tr key={i} style={{ borderBottom: i < recent.length - 1 ? `1px solid ${T.borderFaint}` : "none" }}>
+                  <td style={{ padding: "13px 0" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <Avatar name={call.customer_name} />
+                      <span style={{ fontSize: 13, fontWeight: 500, color: T.text }}>{cleanName(call.customer_name)}</span>
+                    </div>
+                  </td>
+                  <td style={{ padding: "13px 0", fontSize: 13, color: T.textSub }}>{call.phone_number || "—"}</td>
+                  <td style={{ padding: "13px 0" }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, padding: "3px 10px", borderRadius: 999, background: outcomePill.bg, color: outcomePill.color }}>
+                      {outcomePill.label}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </Card>
