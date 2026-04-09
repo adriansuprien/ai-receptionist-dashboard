@@ -777,10 +777,23 @@ const NAV = [
 
 // ─── ROOT ─────────────────────────────────────────────────────────────────────
 export default function App() {
+  const [loggedIn,  setLoggedIn]  = useState(() => sessionStorage.getItem("loggedIn") === "true");
+  const [password,  setPassword]  = useState("");
+  const [authError, setAuthError] = useState(false);
   const [calls,     setCalls]     = useState([]);
   const [analytics, setAnalytics] = useState({});
   const [page,      setPage]      = useState("Dashboard");
   const [settings,  setSettings]  = useState({ restaurantName: "AI Receptionist", phoneNumber: "" });
+
+  const handleLogin = () => {
+    if (password === "punjab2024") {
+      sessionStorage.setItem("loggedIn", "true");
+      setLoggedIn(true);
+      setAuthError(false);
+    } else {
+      setAuthError(true);
+    }
+  };
 
   const refreshCalls = () => {
     fetchWithRetry(`${API_BASE}/calls`)
@@ -805,6 +818,34 @@ export default function App() {
     const interval = setInterval(refreshData, 30000);
     return () => clearInterval(interval);
   }, [refreshData]);
+
+  if (!loggedIn) {
+    return (
+      <div style={{ display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", background: T.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" }}>
+        <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 16, padding: "40px 36px", width: 320, display: "flex", flexDirection: "column", alignItems: "center", gap: 20, boxShadow: "0 4px 24px rgba(44,24,16,0.08)" }}>
+          <img src='/logo.jpg' alt='Punjab Halal' style={{ width: 64, height: 64, borderRadius: 12, objectFit: "cover" }} />
+          <div style={{ textAlign: "center" }}>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 700, color: T.text }}>Punjab Halal</p>
+            <p style={{ margin: "4px 0 0", fontSize: 13, color: T.textMuted }}>Enter your password to continue</p>
+          </div>
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => { setPassword(e.target.value); setAuthError(false); }}
+              onKeyDown={e => e.key === "Enter" && handleLogin()}
+              style={{ fontSize: 13, padding: "10px 12px", borderRadius: 8, border: `1px solid ${authError ? T.red700 : T.border}`, outline: "none", color: T.text, background: T.surface, width: "100%", boxSizing: "border-box" }}
+            />
+            {authError && <p style={{ margin: 0, fontSize: 12, color: T.red700 }}>Incorrect password</p>}
+            <button onClick={handleLogin} style={{ padding: "10px 0", borderRadius: 8, border: "none", background: T.orange, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", width: "100%" }}>
+              Enter
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: T.bg, fontFamily: "-apple-system, BlinkMacSystemFont, 'Inter', sans-serif" }}>
