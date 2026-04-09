@@ -522,7 +522,7 @@ function AnalyticsPage({ calls, analytics }) {
 function OrdersPage({ calls, refreshCalls }) {
   const [orderStatuses, setOrderStatuses] = useState({});
 
-  const orders = calls.filter(c => c.order_summary && c.order_summary.trim() && c.order_status !== "completed");
+  const orders = calls.filter(c => c.order_status === "new");
 
   const getOrderStatus = (call) => {
     if (orderStatuses[call.id] !== undefined) return orderStatuses[call.id];
