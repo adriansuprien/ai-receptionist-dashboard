@@ -555,7 +555,7 @@ function OrdersPage({ calls, refreshCalls }) {
       " · " + d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   };
 
-  const renderCard = (call, showButton) => {
+  const renderCard = (call, showButton, index) => {
     const status = getOrderStatus(call);
     const isNew  = status === "new";
     const raw    = call.order_summary || "";
@@ -594,7 +594,7 @@ function OrdersPage({ calls, refreshCalls }) {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>Order #{call.id}</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: T.text }}>Order #{index}</p>
             <p style={{ margin: "3px 0 0", fontSize: 12, color: T.textMuted }}>{fmtTime(call.created_at)}</p>
           </div>
           <span style={{
@@ -644,7 +644,7 @@ function OrdersPage({ calls, refreshCalls }) {
         </Card>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14, marginBottom: 32 }}>
-          {activeOrders.map(call => renderCard(call, true))}
+          {activeOrders.map((call, i) => renderCard(call, true, i + 1))}
         </div>
       )}
 
@@ -659,7 +659,7 @@ function OrdersPage({ calls, refreshCalls }) {
           </button>
           {showCompleted && (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 14 }}>
-              {completedOrders.map(call => renderCard(call, false))}
+              {completedOrders.map((call, i) => renderCard(call, false, activeOrders.length + i + 1))}
             </div>
           )}
         </div>
